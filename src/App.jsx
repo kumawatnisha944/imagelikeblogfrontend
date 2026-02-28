@@ -18,11 +18,16 @@ function App() {
 
   // ❤️ Like
   const handleLike = async () => {
-    const res = await axios.post(
-      `http://localhost:5000/api/post/like/${post._id}`,
-    );
+    if (!post) return; // ⭐ crash prevent
 
-    setLikes(res.data.likes);
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/post/like/${post._id}`,
+      );
+      setLikes(res.data.likes);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   // 👎 Dislike
@@ -62,35 +67,46 @@ function App() {
 
   // 💬 Add Comment
   const addComment = async () => {
+    if (!post) return;
     if (name === "" || comment === "") {
       alert("Enter name & comment");
       return;
     }
 
-    const res = await axios.post(
-      `http://localhost:5000/api/post/comment/${post._id}`,
-      {
-        name: name,
-        text: comment,
-      },
-    );
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/post/comment/${post._id}`,
+        {
+          name: name,
+          text: comment,
+        },
+      );
 
-    setComments(res.data.comments);
-    setComment("");
+      setComments(res.data.comments);
+      setComment("");
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   // 🗑 Delete Comment
   const deleteComment = async (commentId) => {
-    const res = await axios.delete(
-      `http://localhost:5000/api/post/comment/${post._id}/${commentId}`,
-    );
+    if (!post) return;
 
-    setComments(res.data.comments);
+    try {
+      const res = await axios.delete(
+        `${import.meta.env.VITE_API_URL}/api/post/comment/${post._id}/${commentId}`,
+      );
+
+      setComments(res.data.comments);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   useEffect(() => {
     const fetchPost = async () => {
-      const res = await axios.get("http://localhost:5000/api/post");
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/post`);
       setPost(res.data);
       setLikes(res.data.likes);
       setComments(res.data.comments); // ⭐ important
@@ -99,6 +115,16 @@ function App() {
     fetchPost();
   }, []);
 
+  // ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
+  // LOADING GUARD (VERY IMPORTANT)
+  if (!post) {
+    return (
+      <h2 style={{ textAlign: "center", marginTop: "50px" }}>
+        Loading post...
+      </h2>
+    );
+  }
+  // ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
   return (
     <div className="container">
       <div className="post">
@@ -139,24 +165,25 @@ function App() {
           </button>
 
           <div className="comments">
-            {comments.map((c) => (
-              <div key={c._id} className="single-comment">
-                <div className="comment-top">
-                  <span>
-                    <b>{c.name}:</b> {c.text}
-                  </span>
+            {comments &&
+              comments.map((c) => (
+                <div key={c._id} className="single-comment">
+                  <div className="comment-top">
+                    <span>
+                      <b>{c.name}:</b> {c.text}
+                    </span>
 
-                  {c.name === currentUser && (
-                    <button
-                      className="delete-btn"
-                      onClick={() => deleteComment(c._id)}
-                    >
-                      🗑
-                    </button>
-                  )}
+                    {c.name === currentUser && (
+                      <button
+                        className="delete-btn"
+                        onClick={() => deleteComment(c._id)}
+                      >
+                        🗑
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       </div>
