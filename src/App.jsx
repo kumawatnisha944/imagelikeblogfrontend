@@ -31,12 +31,20 @@ function App() {
   };
 
   // 👎 Dislike
-  const handleDislike = () => {
-    setDislikes((prev) => prev + 1);
+  const handleDislike = async () => {
+    if (!post) return;
+
+    const res = await axios.post(
+      `${import.meta.env.VITE_API_URL}/api/post/dislike/${post._id}`,
+    );
+
+    setDislikes(res.data.dislikes);
   };
 
   // 📤 REAL Share (mobile) + copy fallback (PC)
   const handleShare = async () => {
+    if (!post) return;
+
     const shareData = {
       title: "Nature Image Post",
       text: "Check out this post!",
@@ -45,24 +53,31 @@ function App() {
 
     try {
       if (navigator.share) {
-        // Mobile real share
         await navigator.share(shareData);
-        setShares((prev) => prev + 1);
       } else {
-        // Laptop fallback
         await navigator.clipboard.writeText(window.location.href);
-        alert("Link copied! Now paste it anywhere to share.");
-        setShares((prev) => prev + 1);
+        alert("Link copied!");
       }
+
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/post/share/${post._id}`,
+      );
+
+      setShares(res.data.shares);
     } catch (error) {
       console.log(error);
-      console.log("User cancelled sharing");
     }
   };
 
   // 🔔 Subscribe
-  const handleSubscribe = () => {
-    setSubs((prev) => prev + 1);
+  const handleSubscribe = async () => {
+    if (!post) return;
+
+    const res = await axios.post(
+      `${import.meta.env.VITE_API_URL}/api/post/subscribe/${post._id}`,
+    );
+
+    setSubs(res.data.subscribers);
   };
 
   // 💬 Add Comment
@@ -109,6 +124,9 @@ function App() {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/post`);
       setPost(res.data);
       setLikes(res.data.likes);
+      setDislikes(res.data.dislikes);
+      setShares(res.data.shares);
+      setSubs(res.data.subscribers);
       setComments(res.data.comments); // ⭐ important
     };
 
